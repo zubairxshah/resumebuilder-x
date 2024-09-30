@@ -7,20 +7,26 @@ const pdf = require('html-pdf');
 const app = express();
 const port = 3000;
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+  
+
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configure multer for file upload
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/uploads/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname))
-    }
-});
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'public/uploads/')
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, Date.now() + path.extname(file.originalname))
+//     }
+// });
 
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
+const upload = multer();
 
 // In-memory storage for resumes (replace with a database in a real application)
 const resumes = {};
@@ -35,7 +41,8 @@ app.get('/build', (req, res) => {
 
 app.post('/submit-resume', upload.single('profileImage'), (req, res) => {
     const { username, fullName, email, summary, skills, experience } = req.body;
-    const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
+    // const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
+    const profileImage = null; // For now, we're not handling file uploads
     resumes[username] = { fullName, email, summary, skills, experience, profileImage };
     res.redirect(`/${username}/resume.html`);
 });
@@ -106,8 +113,8 @@ app.get('/:username/edit', (req, res) => {
 app.post('/:username/update', upload.single('profileImage'), (req, res) => {
     const username = req.params.username;
     const { fullName, email, summary, skills, experience } = req.body;
-    const profileImage = req.file ? `/uploads/${req.file.filename}` : resumes[username].profileImage;
-    
+    // const profileImage = req.file ? `/uploads/${req.file.filename}` : resumes[username].profileImage;
+    const profileImage = resumes[username].profileImage; // Keep the existing image or null
     resumes[username] = { ...resumes[username], fullName, email, summary, skills, experience, profileImage };
     res.redirect(`/${username}/resume.html`);
 });
@@ -120,13 +127,7 @@ app.get('/:username/download-pdf', (req, res) => {
         return res.status(404).send('Resume not found');
     }
 
-    let imageHtml = '';
-    if (resume.profileImage) {
-        const imagePath = path.join(__dirname, 'public', resume.profileImage);
-        const imageData = fs.readFileSync(imagePath);
-        const base64Image = Buffer.from(imageData).toString('base64');
-        imageHtml = `<img src="data:image/jpeg;base64,${base64Image}" alt="${resume.fullName}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 20px;">`;
-    }
+    let imageHtml = ''; // We're not handling images for now
 
     const resumeHTML = `
         <!DOCTYPE html>
@@ -154,8 +155,6 @@ app.get('/:username/download-pdf', (req, res) => {
                     margin-bottom: 20px;
                 }
             </style>
-             <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
         </head>
         <body>
             <div class="container">
@@ -204,12 +203,16 @@ app.get('/:username/download-pdf', (req, res) => {
     });
 });
 
-app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
-});
+
+// app.listen(port, () => {
+//     console.log(`Server listening at http://localhost:${port}`);
+// });
+
+// Export the app
+module.exports = app
 
 // Create uploads directory if it doesn't exist
-const dir = './public/uploads';
-if (!fs.existsSync(dir)){
-    fs.mkdirSync(dir, { recursive: true });
-}
+// const dir = './public/uploads';
+// if (!fs.existsSync(dir)){
+//     fs.mkdirSync(dir, { recursive: true });
+// }
