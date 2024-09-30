@@ -1,3 +1,4 @@
+const debug = require('debug')('app:server');
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -14,6 +15,7 @@ const upload = multer();
 
 // In-memory storage for resumes (replace with a database in a real application)
 const resumes = {};
+
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -45,7 +47,7 @@ app.get('/:username/resume.html', (req, res) => {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${resume.fullName}'s Resume</title>
-            <link rel="stylesheet" href="/static/style.css">
+            <link rel="stylesheet" href="/style.css">
         </head>
         <body>
             <nav>
@@ -101,10 +103,12 @@ app.post('/:username/update', upload.single('profileImage'), (req, res) => {
 });
 
 app.get('/:username/download-pdf', async (req, res) => {
+    debug('Attempting to generate PDF');
     const username = req.params.username;
     const resume = resumes[username];
     
     if (!resume) {
+        debug('Resume not found');
         return res.status(404).send('Resume not found');
     }
 
@@ -120,11 +124,7 @@ app.get('/:username/download-pdf', async (req, res) => {
                     font-family: Arial, sans-serif;
                     line-height: 1.6;
                     color: #333;
-                }
-                .container {
-                    width: 80%;
-                    margin: auto;
-                    overflow: hidden;
+                    margin: 0;
                     padding: 20px;
                 }
                 h1, h2 {
@@ -136,30 +136,29 @@ app.get('/:username/download-pdf', async (req, res) => {
             </style>
         </head>
         <body>
-            <div class="container">
-                <h1>${resume.fullName}'s Resume</h1>
-                <div class="section">
-                    <h2>Contact</h2>
-                    <p>Email: ${resume.email}</p>
-                </div>
-                <div class="section">
-                    <h2>Summary</h2>
-                    <p>${resume.summary}</p>
-                </div>
-                <div class="section">
-                    <h2>Skills</h2>
-                    <p>${resume.skills}</p>
-                </div>
-                <div class="section">
-                    <h2>Experience</h2>
-                    <p>${resume.experience}</p>
-                </div>
+            <h1>${resume.fullName}'s Resume</h1>
+            <div class="section">
+                <h2>Contact</h2>
+                <p>Email: ${resume.email}</p>
+            </div>
+            <div class="section">
+                <h2>Summary</h2>
+                <p>${resume.summary}</p>
+            </div>
+            <div class="section">
+                <h2>Skills</h2>
+                <p>${resume.skills}</p>
+            </div>
+            <div class="section">
+                <h2>Experience</h2>
+                <p>${resume.experience}</p>
             </div>
         </body>
         </html>
     `;
 
     try {
+        debug('Launching browser');
         const browser = await puppeteer.launch({
             args: chromium.args,
             defaultViewport: chromium.defaultViewport,
@@ -167,15 +166,25 @@ app.get('/:username/download-pdf', async (req, res) => {
             headless: chromium.headless,
         });
 
+        debug('Creating new page');
         const page = await browser.newPage();
-        await page.setContent(resumeHTML);
-        const pdf = await page.pdf({ format: 'A4' });
+        debug('Setting content');
+        await page.setContent(resumeHTML, { waitUntil: 'networkidle0' });
+        debug('Generating PDF');
+        const pdf = await page.pdf({ 
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+        });
 
+        debug('Closing browser');
         await browser.close();
 
+        debug('Sending PDF');
         res.contentType('application/pdf');
         res.send(pdf);
     } catch (error) {
+        debug('PDF generation error:', error);
         console.error('PDF generation error:', error);
         res.status(500).send('Error generating PDF');
     }
