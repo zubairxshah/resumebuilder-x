@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Your Resume</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+ 
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/build">Build Resume</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Build Your Resume</h1>
+        <form action="/submit-resume" method="POST" enctype="multipart/form-data">
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="fullName">Full Name:</label>
+                <input type="text" id="fullName" name="fullName" required>
+            </div>
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="profileImage">Profile Image:</label>
+                <input type="file" id="profileImage" name="profileImage" accept="image/*">
+            </div>
+            <div>
+                <label for="summary">Summary:</label>
+                <textarea id="summary" name="summary" required></textarea>
+            </div>
+            <div>
+                <label for="skills">Skills:</label>
+                <textarea id="skills" name="skills" required></textarea>
+            </div>
+            <div>
+                <label for="experience">Experience:</label>
+                <textarea id="experience" name="experience" required></textarea>
+            </div>
+            <button type="submit">Create Resume</button>
+        </form>
+    </div>
+</body>
+</html>
