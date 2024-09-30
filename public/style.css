@@ -192,3 +192,11 @@ button:hover,
 .section:hover {
     transform: translateY(-5px);
 }
+.profile-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
