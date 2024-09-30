@@ -21,17 +21,16 @@
   "bugs": {
     "url": "https://github.com/zubairxshah/resumebuilder-x/issues"
   },
-  
-    "dependencies": {
-      "express": "^4.17.1",
-      "body-parser": "^1.19.0",
-      "multer":"^1.4.2",
-      "html-pdf": "^2.2.0"
-    },
-    "devDependencies": {
-      "nodemon": "^2.0.4"
-    },
-  
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "chrome-aws-lambda": "^10.1.0",
+    "express": "^4.17.1",
+    "multer": "^1.4.2",
+    "puppeteer-core": "^23.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
   "homepage": "https://github.com/zubairxshah/resumebuilder-x#readme",
   "description": ""
 }
