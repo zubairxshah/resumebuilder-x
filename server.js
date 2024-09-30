@@ -1,10 +1,12 @@
+const debug = require('debug')('app:server');
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
-const htmlPdf = require('html-pdf-node');
-const debug = require('debug')('app:server');
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
 
+const app = express();
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -104,7 +106,7 @@ app.get('/:username/download-pdf', async (req, res) => {
     debug('Attempting to generate PDF');
     const username = req.params.username;
     const resume = resumes[username];
-
+    
     if (!resume) {
         debug('Resume not found');
         return res.status(404).send('Resume not found');
@@ -156,8 +158,29 @@ app.get('/:username/download-pdf', async (req, res) => {
     `;
 
     try {
-        const options = { format: 'A4' };
-        const pdf = await htmlPdf.generatePdf({ content: resumeHTML }, options);
+        debug('Launching browser');
+        const browser = await puppeteer.launch({
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath,
+            headless: chromium.headless,
+        });
+
+        debug('Creating new page');
+        const page = await browser.newPage();
+        debug('Setting content');
+        await page.setContent(resumeHTML, { waitUntil: 'networkidle0' });
+        debug('Generating PDF');
+        const pdf = await page.pdf({ 
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+        });
+
+        debug('Closing browser');
+        await browser.close();
+
+        debug('Sending PDF');
         res.contentType('application/pdf');
         res.send(pdf);
     } catch (error) {
