@@ -8,6 +8,15 @@ const debug = require('debug')('app:server');
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use((err, req, res, next) => {
+    console.error('Error details:', err);
+    console.error('Stack trace:', err.stack);
+    res.status(500).json({
+      message: 'Internal Server Error',
+      error: process.env.NODE_ENV === 'production' ? {} : err
+    });
+  });
+  
 
 const upload = multer();
 
